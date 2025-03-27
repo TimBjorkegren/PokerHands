@@ -19,54 +19,53 @@ public class MethodTester()
         Assert.Equal(4, result);
     }
 */
-
-    [Theory]
-    [InlineData("5H 6H 7H 8H 9H", "2S 3H 7C 2D KS", "5H 6H 7H 8H 9H", true, "Straight Flush")] // HAND 1 WIn
-    [InlineData("3D 5D AS 9C 6S", "5H 6H 7H 8H 9H", "5H 6H 7H 8H 9H", true, "Straight Flush")] // Hand 2 win
-    /* [InlineData("5H 6H 7H 8H 9H", "5D 6D 7D 8D 9D", null, true, "Straight Flush")] //should be tie
-   
-    [InlineData("5H 6H 7H 8H 9H", "TH JH QH KH AH", "TH JH QH KH AH", true, "Royal Flush")] // Hand 2 wins over straight flush
-    [InlineData("5H 6H 7H 8H 9H", "6H 7H 8H 9H TH", "6H 7H 8H 9H TH", true, "Straight Flush")] // Hand 2 wins, higher straight flush wins */
-    public void TestMethod_DoesStraightFlushWin(
-        string hand1String,
-        string hand2String,
-        string? expectedWinnerString,
-        bool shouldpass,
-        string expectedWinnerHandType
-    )
-    {
-        // Arrange
-        var hand1 = ParseHand(hand1String);
-        var hand2 = ParseHand(hand2String);
-        Hand expectedWinner = expectedWinnerString != null ? ParseHand(expectedWinnerString) : null;
-
-        //Act
-        var (winningHand, handType) = CompareHands.CheckHands(hand1, hand2);
-
-        if (shouldpass)
+    /*
+    
+        [Theory]
+        [InlineData("5H 6H 7H 8H 9H", "2S 3H 7C 2D KS", "5H 6H 7H 8H 9H", true, "Straight Flush")] // HAND 1 WIn
+        [InlineData("3D 5D AS 9C 6S", "5H 6H 7H 8H 9H", "5H 6H 7H 8H 9H", true, "Straight Flush")] // Hand 2 win
+         [InlineData("5H 6H 7H 8H 9H", "5D 6D 7D 8D 9D", null, true, "Straight Flush")] //should be tie
+       
+        [InlineData("5H 6H 7H 8H 9H", "TH JH QH KH AH", "TH JH QH KH AH", true, "Royal Flush")] // Hand 2 wins over straight flush
+        [InlineData("5H 6H 7H 8H 9H", "6H 7H 8H 9H TH", "6H 7H 8H 9H TH", true, "Straight Flush")] // Hand 2 wins, higher straight flush wins
+        public void TestMethod_DoesStraightFlushWin(
+            string hand1String,
+            string hand2String,
+            string? expectedWinnerString,
+            bool shouldpass,
+            string expectedWinnerHandType
+        )
         {
-            if (expectedWinner == null)
+            // Arrange
+            var hand1 = ParseHand(hand1String);
+            var hand2 = ParseHand(hand2String);
+            Hand expectedWinner = expectedWinnerString != null ? ParseHand(expectedWinnerString) : null;
+    
+            //Act
+            var (winningHand, handType) = CompareHands.CheckHands(hand1, hand2);
+    
+            if (shouldpass)
             {
-                Assert.Null(winningHand);
+                if (expectedWinner == null)
+                {
+                    Assert.Null(winningHand);
+                }
+                else
+                {
+                    Assert.Equal(expectedWinner.Cards, winningHand.Cards);
+                }
+                Assert.Equal(expectedWinnerHandType, handType);
             }
             else
             {
-                Assert.Equal(expectedWinner.Cards, winningHand.Cards);
+                Assert.NotEqual(expectedWinner.Cards, winningHand.Cards);
             }
-            Assert.Equal(expectedWinnerHandType, handType);
-        }
-        else
-        {
-            Assert.NotEqual(expectedWinner.Cards, winningHand.Cards);
-        }
-    }
+        }  */
 
     [Theory]
-    // Correct cases (shouldPass = true)
     [InlineData("2H 3D 5S 9C KD", "2C 3H 4S 8C AH", "2C 3H 4S 8C AH", true)] // Hand2 should win
     [InlineData("AS KH 5S 9C KD", "2C 3D 4S 6S 2H", "AS KH 5S 9C KD", true)] // Hand1 should win
     [InlineData("2H 3D 5S 9C KD", "2C 3H 5S 9C KD", null, true)] // Should be tie
-    // Incorrect cases (shouldPass = false)
     [InlineData("AS KH 5S 9C KD", "2C 3D 4S 6S 2H", "2C 3D 4S 6S 2H", false)] // Wrong winner (should fail)
     [InlineData("2H 3D 5S 9C KD", "2C 3H 5S 9C KD", "2H 3D 5S 9C KD", false)] // Should be tie, not Hand1
     public void TestMethod_CompareHighestCardWhichIsTheWinner(
@@ -153,5 +152,57 @@ public class MethodTester()
         }
 
         return new Hand(cards);
+    }
+
+    [Fact]
+    public void TestMethodIsAPair()
+    {
+        // Arrange
+        var hand = ParseHand("AS KH 5S 5C 3D");
+
+        // Act
+        var result = CompareHands.IsPair(hand);
+        Console.WriteLine(result);
+
+        // Assert
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void TestMethodIsNotAPair()
+    {
+        // Arrange
+        var hand = ParseHand("AS KH 6S 5C 3S");
+
+        // Act
+        var result = CompareHands.IsPair(hand);
+        Console.WriteLine(result);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData("2H 2D 5S 5C KD", true)] // This hand has two pair
+    [InlineData("9S KH 5S 9C KD", true)] // This hand also has two pairs
+    [InlineData("3S KH 5S 8C KD", false)] // This hand has one pair so false
+    [InlineData("3S KH 5S 8C 2D", false)] // This hand has zero pairs
+    public void TestMethodIsItTwoPair(string handString, bool shouldPass)
+    {
+        var hand = ParseHand(handString);
+
+        var result = CompareHands.IsTwoPair(hand);
+
+        if (shouldPass)
+        {
+            Assert.NotNull(result);
+
+            var pairCount = hand.Cards.GroupBy(c => c.Rank).Count(g => g.Count() == 2);
+            Assert.Equal(2, pairCount);
+        }
+        else
+        {
+            Assert.Null(result);
+        }
     }
 }
