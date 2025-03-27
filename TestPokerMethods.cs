@@ -272,4 +272,43 @@ public class MethodTester()
             Assert.True(rankGroups[0] != 3 || (rankGroups.Count > 1 && rankGroups[1] != 2));
         }
     }
+
+    [Theory]
+    [InlineData("AH KH QH JH TH", true)] // Royal Flush (Hearts)
+    [InlineData("AD KD QD JD TD", true)] // Royal Flush (Diamonds)
+    [InlineData("AS KS QS JS TS", true)] // Royal Flush (Spades)
+    [InlineData("AC KC QC JC TC", true)] // Royal Flush (Clubs)
+    [InlineData("AH KH QH JH 9H", false)] // Straight Flush (not royal)
+    [InlineData("AH AS AC AD KH", false)] // Four of a kind
+    [InlineData("AH KH QH JH TD", false)] // Mixed suits
+    [InlineData("KH QH JH TH 9H", false)] // King-high straight flush
+    public void TestMethodIsItRoyalFlush(string handString, bool shouldBeRoyalFlush)
+    {
+        var hand = ParseHand(handString);
+
+        var result = CompareHands.IsRoyalFlush(hand);
+
+        if (shouldBeRoyalFlush)
+        {
+            Assert.NotNull(result);
+
+            var uniqueSuits = hand.Cards.Select(c => c.Suit).Distinct().Count();
+            Assert.Equal(1, uniqueSuits);
+
+            var royalRanks = new HashSet<string> { "A", "K", "Q", "J", "T" };
+            var handRanks = hand.Cards.Select(c => c.Rank.ToString()).ToHashSet();
+            Assert.True(royalRanks.SetEquals(handRanks));
+        }
+        else
+        {
+            Assert.Null(result);
+
+            var isFlush = hand.Cards.Select(c => c.Suit).Distinct().Count() == 1;
+            var hasRoyalRanks = new HashSet<string> { "A", "K", "Q", "J", "T" }.SetEquals(
+                hand.Cards.Select(c => c.Rank.ToString())
+            );
+
+            Assert.False(isFlush && hasRoyalRanks);
+        }
+    }
 }
