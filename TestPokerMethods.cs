@@ -232,4 +232,44 @@ public class MethodTester()
             Assert.True(uniqueSuits2 > 1);
         }
     }
+
+    [Theory]
+    [InlineData("AH AS AC KH KC", true)] // This hand has full house
+    [InlineData("KH KS KD 9S 9D", true)] // This hand has full house
+    [InlineData("3S KH 5S 8C KD", false)] // This hand don't have a full house
+    [InlineData("3S KH 2S 2C 2D", false)] // This hand no full house
+    [InlineData("AS AD AH AC KD", false)] // Four Aces (not full house)
+    [InlineData("KS KH QS QC JD", false)] // Two pair (not full house)
+    public void TestMethodIsItFullHouse(string handString, bool shouldBeFullHouse)
+    {
+        var hand = ParseHand(handString);
+
+        var result = CompareHands.IsFullHouse(hand);
+
+        if (shouldBeFullHouse)
+        {
+            Assert.NotNull(result);
+
+            var rankGroups = hand
+                .Cards.GroupBy(c => c.Rank)
+                .Select(g => g.Count())
+                .OrderByDescending(count => count)
+                .ToList();
+
+            Assert.Equal(3, rankGroups[0]);
+            Assert.Equal(2, rankGroups[1]);
+        }
+        else
+        {
+            Assert.Null(result);
+
+            var rankGroups = hand
+                .Cards.GroupBy(c => c.Rank)
+                .Select(g => g.Count())
+                .OrderByDescending(count => count)
+                .ToList();
+
+            Assert.True(rankGroups[0] != 3 || (rankGroups.Count > 1 && rankGroups[1] != 2));
+        }
+    }
 }
