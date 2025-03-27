@@ -205,4 +205,31 @@ public class MethodTester()
             Assert.Null(result);
         }
     }
+
+    [Theory]
+    [InlineData("2H 3H 5H 8H 9H", true)] // This hand has flush
+    [InlineData("9S KS 5S 9S 4S", true)] // This hand has flush
+    [InlineData("3S KH 5S 8C KD", false)] // This hand don't have a flush
+    [InlineData("3S KH 5S 8C 2D", false)] // This hand no flush
+    public void TestMethodIsItFlush(string handString, bool shouldPass)
+    {
+        var hand = ParseHand(handString);
+
+        var result = CompareHands.IsFlush(hand);
+
+        if (shouldPass)
+        {
+            Assert.NotNull(result);
+
+            var uniqueSuits = hand.Cards.Select(c => c.Suit).Distinct().Count();
+            Assert.Equal(1, uniqueSuits);
+        }
+        else
+        {
+            Assert.Null(result);
+
+            var uniqueSuits2 = hand.Cards.Select(c => c.Suit).Distinct().Count();
+            Assert.True(uniqueSuits2 > 1);
+        }
+    }
 }
