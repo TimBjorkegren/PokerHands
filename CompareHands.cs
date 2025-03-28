@@ -1,80 +1,89 @@
-﻿using System.Text.RegularExpressions;
-
-namespace CardGame
+﻿namespace CardGame
 {
-    public class CompareHands
+    public static class CompareHands
     {
-
-        // SHOULD PROBABLY BE REFACTORED TO USE A POINT SYSTEM TO DETERMINE WINNER INSTEAD OF STRING COMPARISON - TODO - THINK ABOUT THIS
+        private static readonly Dictionary<string, int> HandPoints = new Dictionary<string, int>
+        {
+            { "Royal Straight Flush", 10 },
+            { "Royal Flush", 9 },
+            { "Straight Flush", 8 },
+            { "Four of a Kind", 7 },
+            { "Full House", 6 },
+            { "Flush", 5 },
+            { "Straight", 4 },
+            { "Three of a Kind", 3 },
+            { "Two Pair", 2 },
+            { "Pair", 1 },
+            { "High Card", 0 },
+        };
 
         public static (Hand winningHand, string handType) CheckHands(Hand hand1, Hand hand2)
         {
-            var hands = new[] { hand1, hand2 };
-            var methods = new Func<Hand, Hand>[] { IsRoyalFlush, IsStraightFlush, IsFourOfAKind, IsFullHouse, IsFlush, IsStraight, IsThreeOfAKind, IsTwoPair, IsPair };
+            var methods = new Func<Hand, (Hand hand, string handType)>[]
+            {
+                IsRoyalStraightFlush,
+                IsRoyalFlush,
+                IsStraightFlush,
+                IsFourOfAKind,
+                IsFullHouse,
+                IsFlush,
+                IsStraight,
+                IsThreeOfAKind,
+                IsTwoPair,
+                IsPair,
+            };
+
             foreach (var method in methods)
             {
-                foreach (var hand in hands)
+                var hand1Result = method(hand1);
+                var hand2Result = method(hand2);
+
+                if (hand1Result.hand != null && hand2Result.hand != null)
                 {
-                    if (method(hand) != null)
+                    if (HandPoints[hand1Result.handType] > HandPoints[hand2Result.handType])
                     {
-                        var handType = Regex.Replace(
-                                method.Method.Name[2..], @"([A-Z])", " $1"
-                            )[1..].Replace("Of A", "of a");
-                        return (hand, handType);
+                        return hand1Result;
                     }
+                    else if (HandPoints[hand1Result.handType] < HandPoints[hand2Result.handType])
+                    {
+                        return hand2Result;
+                    }
+                    else
+                    {
+                        return (CompareSameTypeHands(hand1, hand2), hand1Result.handType);
+                    }
+                }
+                else if (hand1Result.hand != null)
+                {
+                    return hand1Result;
+                }
+                else if (hand2Result.hand != null)
+                {
+                    return hand2Result;
                 }
             }
             return (CompareHighestCard(hand1, hand2), "High Card"); // No special hand, highest card wins
         }
 
-        // This is a helper method to get the hand type as a string
-        /*private static string GetHandType(Func<Hand, Hand> method)
+        private static Hand CompareSameTypeHands(Hand hand1, Hand hand2)
         {
-            if (method == IsRoyalStraightFlush)
+            var ranks = "23456789TJQKA";
+            var sorted1 = hand1.Cards.OrderBy(c => ranks.IndexOf(c.Rank)).ToList();
+            var sorted2 = hand2.Cards.OrderBy(c => ranks.IndexOf(c.Rank)).ToList();
+
+            for (var i = sorted1.Count - 1; i >= 0; i--)
             {
-                return "Royal Straight Flush";
+                if (ranks.IndexOf(sorted1[i].Rank) > ranks.IndexOf(sorted2[i].Rank))
+                {
+                    return hand1;
+                }
+                if (ranks.IndexOf(sorted1[i].Rank) < ranks.IndexOf(sorted2[i].Rank))
+                {
+                    return hand2;
+                }
             }
-            else if (method == IsRoyalFlush)
-            {
-                return "Royal Flush";
-            }
-            else if (method == IsStraightFlush)
-            {
-                return "Straight Flush";
-            }
-            else if (method == IsFourOfAKind)
-            {
-                return "Four of a Kind";
-            }
-            else if (method == IsFullHouse)
-            {
-                return "Full House";
-            }
-            else if (method == IsFlush)
-            {
-                return "Flush";
-            }
-            else if (method == IsStraight)
-            {
-                return "Straight";
-            }
-            else if (method == IsThreeOfAKind)
-            {
-                return "Three of a Kind";
-            }
-            else if (method == IsTwoPair)
-            {
-                return "Two Pair";
-            }
-            else if (method == IsPair)
-            {
-                return "Pair";
-            }
-            else
-            {
-                return "Unknown"; // Should never happen
-            }
-    }*/
+            return null!;
+        }
 
         // This is a helper method to compare the highest card in each hand
         public static Hand CompareHighestCard(Hand hand1, Hand hand2)
@@ -96,22 +105,19 @@ namespace CardGame
             return null!;
         }
 
-        // Method to check if a hand is a pair
-        public static Hand IsPair(Hand hand)
+        public static (Hand hand, string handType) IsPair(Hand hand)
         {
             foreach (var card in hand.Cards)
             {
                 if (hand.Cards.Count(c => c.Rank == card.Rank) == 2)
                 {
-                    return hand;
+                    return (hand, "Pair");
                 }
             }
-            return null!;
+            return (null!, null!);
         }
 
-        // At this moment this method is broken. It returns two pairs if there is one pair in each hand....TODO NEEDS FIX
-        // This is kinda working now...
-        public static Hand IsTwoPair(Hand hand)
+        public static (Hand hand, string handType) IsTwoPair(Hand hand)
         {
             var pair1 = 0;
             var pair2 = 0;
@@ -130,28 +136,26 @@ namespace CardGame
 
                     if (pair1 != 0 && pair2 != 0)
                     {
-                        return hand;
+                        return (hand, "Two Pair");
                     }
                 }
             }
-            return null!;
+            return (null!, null!);
         }
 
-        // Method to check if a hand is three of a kind
-        public static Hand IsThreeOfAKind(Hand hand)
+        public static (Hand hand, string handType) IsThreeOfAKind(Hand hand)
         {
             foreach (var card in hand.Cards)
             {
                 if (hand.Cards.Count(c => c.Rank == card.Rank) == 3)
                 {
-                    return hand;
+                    return (hand, "Three of a Kind");
                 }
             }
-            return null!;
+            return (null!, null!);
         }
 
-        // Method to check if a hand is a straight
-        public static Hand IsStraight(Hand hand)
+        public static (Hand hand, string handType) IsStraight(Hand hand)
         {
             var ranks = "23456789TJQKA";
             var sorted = hand.Cards.OrderBy(c => ranks.IndexOf(c.Rank)).ToList();
@@ -159,55 +163,55 @@ namespace CardGame
             {
                 if (ranks.IndexOf(sorted[i + 1].Rank) - ranks.IndexOf(sorted[i].Rank) != 1)
                 {
-                    return null!;
+                    return (null!, null!);
                 }
             }
-            return hand;
+            return (hand, "Straight");
         }
 
-        // Method to check if a hand is a flush
-        public static Hand IsFlush(Hand hand)
+        public static (Hand hand, string handType) IsFlush(Hand hand)
         {
             foreach (var card in hand.Cards)
             {
                 if (hand.Cards.Count(c => c.Suit == card.Suit) == 5)
                 {
-                    return hand;
+                    return (hand, "Flush");
                 }
             }
-            return null!;
+            return (null!, null!);
         }
 
-        // Method to check if a hand is a full house
-        public static Hand IsFullHouse(Hand hand)
+        public static (Hand hand, string handType) IsFullHouse(Hand hand)
         {
-            return IsPair(hand) != null && IsThreeOfAKind(hand) != null ? hand : null!;
+            return IsPair(hand).hand != null && IsThreeOfAKind(hand).hand != null
+                ? (hand, "Full House")
+                : (null!, null!);
         }
 
-        public static Hand IsFourOfAKind(Hand hand)
+        public static (Hand hand, string handType) IsFourOfAKind(Hand hand)
         {
             foreach (var card in hand.Cards)
             {
                 if (hand.Cards.Count(c => c.Rank == card.Rank) == 4)
                 {
-                    return hand;
+                    return (hand, "Four of a Kind");
                 }
             }
-            return null!;
+            return (null!, null!);
         }
 
-        // Method to check if a hand is a straight flush
-        public static Hand IsStraightFlush(Hand hand)
+        public static (Hand hand, string handType) IsStraightFlush(Hand hand)
         {
-            return IsStraight(hand) != null && IsFlush(hand) != null ? hand : null!;
+            return IsStraight(hand).hand != null && IsFlush(hand).hand != null
+                ? (hand, "Straight Flush")
+                : (null!, null!);
         }
 
-        // Need to fix this method - TODO
-        public static Hand IsRoyalFlush(Hand hand)
+        public static (Hand hand, string handType) IsRoyalFlush(Hand hand)
         {
-            if (IsFlush(hand) == null)
+            if (IsFlush(hand).hand == null)
             {
-                return null!;
+                return (null!, null!);
             }
             var ranks = "TJQKA";
             var sorted = hand.Cards.OrderBy(c => ranks.IndexOf(c.Rank)).ToList();
@@ -215,16 +219,17 @@ namespace CardGame
             {
                 if (sorted[i].Rank != ranks[i])
                 {
-                    return null!;
+                    return (null!, null!);
                 }
             }
-            return hand;
+            return (hand, "Royal Flush");
         }
 
-        // Need to fix this method - TODO
-        public static Hand IsRoyalStraightFlush(Hand hand)
+        public static (Hand hand, string handType) IsRoyalStraightFlush(Hand hand)
         {
-            return IsRoyalFlush(hand) != null && IsStraightFlush(hand) != null ? hand : null!;
+            return IsRoyalFlush(hand).hand != null && IsStraightFlush(hand).hand != null
+                ? (hand, "Royal Straight Flush")
+                : (null!, null!);
         }
     }
 }
