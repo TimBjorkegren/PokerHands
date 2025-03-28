@@ -96,55 +96,37 @@ public class MethodTester()
         // Arrange
         var hand1 = ParseHand(hand1String);
         var hand2 = ParseHand(hand2String);
-        Hand expectedWinner = expectedWinnerString != null ? ParseHand(expectedWinnerString) : null;
+        var expectedWinner = expectedWinnerString != null ? ParseHand(expectedWinnerString) : null;
 
         // Act
-        var result = CompareHands.CompareHighestCard(hand1, hand2);
+        var (winningHand, handType) = CompareHands.CheckHands(hand1, hand2);
 
         // Assert
         if (shouldPass)
         {
-            // Verify CORRECT behavior
             if (expectedWinner == null)
             {
-                Assert.Null(result);
+                Assert.Null(winningHand);
             }
             else
             {
-                Assert.NotNull(result);
-                for (int i = 0; i < 5; i++)
-                {
-                    /* Assert.True(result == hand1 || result == hand2); */
-                    /* Assert.Equal(expectedWinner, result); */
-                    Assert.Equal(expectedWinner.Cards[i].Rank, result.Cards[i].Rank);
-                }
+                Assert.NotNull(winningHand);
+                Assert.Equal(expectedWinner.Cards, winningHand.Cards);
             }
         }
         else
         {
             if (expectedWinner == null)
             {
-                Assert.NotNull(result);
+                Assert.NotNull(winningHand);
+            }
+            else if (winningHand == null)
+            {
+                return;
             }
             else
             {
-                if (result == null)
-                {
-                    return;
-                }
-                else
-                {
-                    bool allMatch = true;
-                    for (int i = 0; i < 5; i++)
-                    {
-                        if (expectedWinner.Cards[i].Rank != result.Cards[i].Rank)
-                        {
-                            allMatch = false;
-                            break;
-                        }
-                    }
-                    Assert.False(allMatch);
-                }
+                Assert.NotEqual(expectedWinner.Cards, winningHand.Cards);
             }
         }
     }
