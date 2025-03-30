@@ -100,23 +100,26 @@ public class MethodTester()
 
         // Act
         var (winningHand, handType) = CompareHands.CheckHands(hand1, hand2);
+        var winningHandString =
+            winningHand != null
+                ? ConvertSymbolFormatToLetters(string.Join(" ", winningHand.Cards))
+                : null;
 
         // Assert
         if (shouldPass)
         {
-            if (expectedWinner == null)
+            if (expectedWinnerString == null)
             {
                 Assert.Null(winningHand);
             }
             else
             {
-                Assert.NotNull(winningHand);
-                Assert.Equal(expectedWinner.Cards, winningHand.Cards);
+                Assert.Equal(expectedWinnerString, winningHandString);
             }
         }
         else
         {
-            if (expectedWinner == null)
+            if (expectedWinnerString == null)
             {
                 Assert.NotNull(winningHand);
             }
@@ -126,9 +129,25 @@ public class MethodTester()
             }
             else
             {
-                Assert.NotEqual(expectedWinner.Cards, winningHand.Cards);
+                Assert.NotEqual(expectedWinnerString, winningHandString);
             }
         }
+    }
+
+    private string ConvertSymbolFormatToLetters(string symbolHand)
+    {
+        var suitMap = new Dictionary<char, char>
+        {
+            { '♥', 'H' },
+            { '♦', 'D' },
+            { '♣', 'C' },
+            { '♠', 'S' },
+        };
+
+        return string.Join(
+            " ",
+            symbolHand.Split(' ').Select(card => $"{card[0]}{suitMap[card[1]]}")
+        );
     }
 
     private Hand ParseHand(string handString)
