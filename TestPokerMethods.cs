@@ -23,6 +23,38 @@ public class MethodTester()
     }
 */
 
+    [Theory]
+    [InlineData("Royal Straight Flush")]
+    public void RoyalFlush_ShouldBeat_FourOfAKind(string expectedWinnerHandType)
+    {
+        var RoyalStraightFlush = new Hand(
+            [
+                new Card('♥', 'A'),
+                new Card('♥', 'K'),
+                new Card('♥', 'Q'),
+                new Card('♥', 'T'),
+                new Card('♥', 'J'),
+            ]
+        );
+
+        var FourOfKind = new Hand(
+            [
+                new Card('♣', '5'),
+                new Card('♠', '5'),
+                new Card('♥', '5'),
+                new Card('♣', '5'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        var (winningHand1, handType1) = CompareHands.CheckHands(RoyalStraightFlush, FourOfKind);
+        var (winningHand2, handType2) = CompareHands.CheckHands(FourOfKind, RoyalStraightFlush);
+
+        Assert.Equal(expectedWinnerHandType, handType1);
+        Assert.Equal(expectedWinnerHandType, handType2);
+        Assert.Equal(RoyalStraightFlush, winningHand1);
+        Assert.Equal(RoyalStraightFlush, winningHand2);
+    }
 
     [Theory]
     [InlineData("Flush")]
