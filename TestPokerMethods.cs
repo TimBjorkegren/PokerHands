@@ -24,6 +24,72 @@ public class MethodTester()
 */
 
     [Theory]
+    [InlineData("Pair")]
+    public void Pair_ShouldBeat_HighCard(string expectedWinnerHandType)
+    {
+        var Pair = new Hand(
+            [
+                new Card('♥', '2'),
+                new Card('♥', '2'),
+                new Card('♠', '8'),
+                new Card('♣', '7'),
+                new Card('♣', '6'),
+            ]
+        );
+
+        var HighCard = new Hand(
+            [
+                new Card('♣', 'A'),
+                new Card('♠', '5'),
+                new Card('♥', '4'),
+                new Card('♣', '2'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        var (winningHand1, handType1) = CompareHands.CheckHands(Pair, HighCard);
+        var (winningHand2, handType2) = CompareHands.CheckHands(HighCard, Pair);
+
+        Assert.Equal(expectedWinnerHandType, handType1);
+        Assert.Equal(expectedWinnerHandType, handType2);
+        Assert.Equal(Pair, winningHand1);
+        Assert.Equal(Pair, winningHand2);
+    }
+
+    [Theory]
+    [InlineData("Straight")]
+    public void Straight_ShouldBeat_TwoPair(string expectedWinnerHandType)
+    {
+        var Straight = new Hand(
+            [
+                new Card('♥', 'T'),
+                new Card('♥', '9'),
+                new Card('♠', '8'),
+                new Card('♣', '7'),
+                new Card('♣', '6'),
+            ]
+        );
+
+        var TwoPair = new Hand(
+            [
+                new Card('♣', '5'),
+                new Card('♠', '5'),
+                new Card('♥', 'T'),
+                new Card('♣', 'T'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        var (winningHand1, handType1) = CompareHands.CheckHands(Straight, TwoPair);
+        var (winningHand2, handType2) = CompareHands.CheckHands(TwoPair, Straight);
+
+        Assert.Equal(expectedWinnerHandType, handType1);
+        Assert.Equal(expectedWinnerHandType, handType2);
+        Assert.Equal(Straight, winningHand1);
+        Assert.Equal(Straight, winningHand2);
+    }
+
+    [Theory]
     [InlineData("Royal Straight Flush")]
     public void RoyalFlush_ShouldBeat_FourOfAKind(string expectedWinnerHandType)
     {
@@ -241,6 +307,28 @@ public class MethodTester()
         }
 
         return new Hand(cards);
+    }
+
+    [Fact]
+    public void TestMethodIsItThreeOfaKind()
+    {
+        // Arrange
+        var ThreeOfKind = new Hand(
+            [
+                new Card('♣', '5'),
+                new Card('♠', '5'),
+                new Card('♠', '5'),
+                new Card('♣', '7'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        // Act
+        var (resultHand, resultType) = CompareHands.IsThreeOfAKind(ThreeOfKind);
+
+        // Assert
+        Assert.NotNull(resultHand);
+        Assert.Equal("Three of a Kind", resultType);
     }
 
     [Fact]
