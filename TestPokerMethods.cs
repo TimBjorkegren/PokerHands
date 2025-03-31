@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using CardGame;
+using Microsoft.VisualBasic;
 using Microsoft.VisualStudio.TestPlatform.Common.Utilities;
 using Xunit;
 
@@ -21,6 +23,36 @@ public class MethodTester()
     }
 */
 
+
+    [Theory]
+    [InlineData("Flush")]
+    public void Flush_ShouldBeat_ThreeOfAKind(string expectedWinnerHandType)
+    {
+        var FlushHand = new Hand(
+            [
+                new Card('♠', '2'),
+                new Card('♠', '5'),
+                new Card('♠', '4'),
+                new Card('♠', '7'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        var ThreeOfKind = new Hand(
+            [
+                new Card('♣', '5'),
+                new Card('♠', '5'),
+                new Card('♠', '5'),
+                new Card('♣', '7'),
+                new Card('♠', '9'),
+            ]
+        );
+
+        var (winningHand, handType) = CompareHands.CheckHands(FlushHand, ThreeOfKind);
+
+        Assert.Equal(expectedWinnerHandType, handType);
+        Assert.Equal(FlushHand, winningHand);
+    }
 
     [Theory]
     [InlineData("5H 6H 7H 8H 9H", "2S 3H 7C 2D KS", "5H 6H 7H 8H 9H", true, "Straight Flush")]
